@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CineIA - Descubra Novos Filmes</title>
+        <meta
+            name="description"
+            content="Descubra novos filmes com a magia da inteligência artificial usando CineIA. Obtenha recomendações personalizadas baseadas nos seus filmes favoritos."
+        />
+        <meta
+            name="keywords"
+            content="filmes, recomendações, IA, cinema, entretenimento"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+        />
+
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <style>
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .fade-in {
+                animation: fadeIn 0.5s ease-out;
+            }
+            .movie-card {
+                transition: all 0.3s ease;
+            }
+            .movie-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+            .feature-container {
+                display: flex;
+                flex-direction: row;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+            .feature-card {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 1rem;
+                padding: 1.5rem;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 100%;
+                transition: all 0.3s ease;
+            }
+            .feature-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+            .feature-icon {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+            .feature-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+            .feature-description {
+                font-size: 0.875rem;
+                line-height: 1.5;
+            }
+            @media (max-width: 640px) {
+                .movie-card {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .movie-card img {
+                    margin-bottom: 1rem;
+                }
+                .container {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+                h1 {
+                    font-size: 2.5rem;
+                }
+                .subtitle {
+                    font-size: 1.2rem;
+                }
+                .search-input {
+                    font-size: 1rem;
+                    padding: 0.75rem 1rem 0.75rem 2.5rem;
+                }
+                .button-container {
+                    flex-direction: column;
+                }
+                .main-button {
+                    width: 100%;
+                    margin-bottom: 1rem;
+                    font-size: 1rem;
+                    padding: 0.75rem 1rem;
+                }
+                .feature-container {
+                    flex-direction: column;
+                }
+                .feature-card {
+                    margin-bottom: 1rem;
+                }
+            }
+        </style>
+    </head>
+    <body
+        class="bg-gradient-to-r from-purple-800 via-indigo-900 to-blue-900 min-h-screen font-['Poppins'] text-gray-100"
+    >
+        <div id="app" class="container mx-auto px-4 py-8 md:py-12">
+            <header class="text-center mb-8 md:mb-16 fade-in">
+                <h1
+                    class="text-3xl md:text-4xl lg:text-6xl font-bold mb-2 md:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500"
+                >
+                    <i class="fas fa-film mr-2"></i>CineIA
+                </h1>
+                <p
+                    class="text-lg md:text-xl lg:text-2xl text-indigo-200 subtitle"
+                >
+                    Descubra novos filmes com a magia da inteligência artificial
+                </p>
+            </header>
+
+            <!-- Novas descrições destacadas -->
+            <div
+                class="flex flex-col md:flex-row justify-between mb-8 md:mb-16 space-y-4 md:space-y-0 md:space-x-4 feature-container"
+            >
+                <div class="feature-card flex-1">
+                    <i class="fas fa-brain text-3xl mb-4 text-pink-400"></i>
+                    <h3 class="text-xl font-semibold mb-2">
+                        Recomendações Baseadas em IA
+                    </h3>
+                    <p>
+                        Descubra novos filmes com nossa IA avançada, que analisa
+                        seus filmes favoritos para oferecer recomendações
+                        personalizadas e surpreendentes.
+                    </p>
+                </div>
+                <div class="feature-card flex-1">
+                    <i class="fas fa-bolt text-3xl mb-4 text-yellow-400"></i>
+                    <h3 class="text-xl font-semibold mb-2">
+                        IA Potente no Seu Dispositivo
+                    </h3>
+                    <p>
+                        Utilizamos WebGPU para processar modelos de linguagem
+                        avançados diretamente no seu dispositivo. Desfrute de
+                        recomendações inteligentes sem custos adicionais!
+                    </p>
+                </div>
+            </div>
+
+            <div class="mb-4 flex items-center">
+                <label class="inline-flex items-center">
+                    <input
+                        type="checkbox"
+                        v-model="useWebGPU"
+                        class="form-checkbox h-5 w-5 text-blue-600"
+                    />
+                    <span class="ml-2 text-white">Usar WebGPU</span>
+                </label>
+                <span
+                    v-if="!webGPUInitialized"
+                    class="ml-2 text-yellow-300 flex items-center"
+                >
+                    <i class="fas fa-cog fa-spin mr-2"></i>
+                    Carregando... A magia da IA está sendo preparada! Pode
+                    demorar um pouquinho na primeira vez.
+                </span>
+            </div>
+
+            <div
+                class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl p-4 md:p-8 mb-8 md:mb-12 fade-in"
+            >
+                <h2
+                    class="text-xl md:text-2xl lg:text-3xl font-semibold mb-4 md:mb-6 text-yellow-300"
+                >
+                    <i class="fas fa-star mr-2"></i>Seus Filmes Favoritos
+                </h2>
+                <div class="relative mb-4 md:mb-6">
+                    <input
+                        v-model="novoFilme"
+                        @input="buscarFilmes"
+                        @keyup.enter="selecionarFilme"
+                        type="text"
+                        placeholder="Busque e adicione um filme que você adorou"
+                        class="w-full p-3 md:p-4 pl-10 md:pl-12 bg-white bg-opacity-20 border-2 border-indigo-300 rounded-full focus:outline-none focus:border-yellow-300 transition duration-300 text-white placeholder-indigo-200 search-input"
+                    />
+                    <i
+                        class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-300"
+                    ></i>
+                </div>
+                <ul
+                    v-if="resultadosBusca.length"
+                    class="mb-6 bg-white bg-opacity-20 rounded-xl p-4"
+                >
+                    <li
+                        v-for="filme in resultadosBusca"
+                        :key="filme.id"
+                        @click="selecionarFilme(filme)"
+                        class="cursor-pointer hover:bg-white hover:bg-opacity-30 p-2 rounded"
+                    >
+                        {{ filme.title }} ({{ filme.release_date.substring(0, 4)
+                        }})
+                    </li>
+                </ul>
+                <transition-group
+                    name="list"
+                    tag="ul"
+                    class="space-y-4 max-h-96 overflow-y-auto pr-4"
+                >
+                    <li
+                        v-for="(filme, index) in filmesAssistidos"
+                        :key="filme.id"
+                        class="flex flex-col md:flex-row items-start md:items-center justify-between bg-white bg-opacity-20 p-4 rounded-2xl movie-card"
+                    >
+                        <div class="flex items-center mb-4 md:mb-0">
+                            <img
+                                :src="'https://image.tmdb.org/t/p/w92' + filme.poster_path"
+                                :alt="filme.title"
+                                class="mr-4 rounded-lg w-16 h-24 object-cover"
+                                loading="lazy"
+                            />
+                            <div>
+                                <h3 class="font-semibold text-lg">
+                                    {{ filme.title }}
+                                </h3>
+                                <p class="text-sm text-indigo-200">
+                                    {{ filme.release_date.substring(0, 4) }}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            @click="removerFilme(index)"
+                            class="text-red-400 hover:text-red-600 transition duration-300 transform hover:scale-110"
+                        >
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </li>
+                </transition-group>
+            </div>
+
+            <div
+                class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8 md:mb-12 button-container"
+            >
+                <button
+                    @click="obterRecomendacoes"
+                    class="bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-3 rounded-full font-bold text-lg md:text-xl hover:from-green-500 hover:to-blue-600 transition duration-300 transform hover:scale-105 shadow-lg main-button"
+                    :disabled="!webGPUInitialized"
+                >
+                    <i class="fas fa-magic mr-2"></i>Descobrir Recomendações
+                    Mágicas
+                </button>
+                <button
+                    @click="obterFilmeAleatorio"
+                    class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-3 rounded-full font-bold text-lg md:text-xl hover:from-pink-600 hover:to-purple-700 transition duration-300 transform hover:scale-105 shadow-lg main-button"
+                >
+                    <i class="fas fa-dice mr-2"></i>Filme Aleatório
+                </button>
+            </div>
+
+            <transition name="fade">
+                <div
+                    v-if="recomendacoes"
+                    class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl p-4 md:p-8 fade-in"
+                >
+                    <h2
+                        class="text-2xl md:text-3xl font-semibold mb-6 text-green-300"
+                    >
+                        <i class="fas fa-robot mr-2"></i>Recomendações da IA
+                    </h2>
+                    <ul class="space-y-6">
+                        <li
+                            v-for="filme in recomendacoes"
+                            :key="filme.id"
+                            class="bg-white bg-opacity-20 p-4 md:p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center movie-card"
+                        >
+                            <img
+                                :src="'https://image.tmdb.org/t/p/w185' + filme.poster_path"
+                                :alt="filme.title"
+                                class="mb-4 md:mb-0 md:mr-6 rounded-lg w-full md:w-24 h-auto md:h-36 object-cover"
+                                loading="lazy"
+                            />
+                            <div>
+                                <h3 class="font-semibold text-xl mb-2">
+                                    {{ filme.title }}
+                                </h3>
+                                <p class="text-indigo-200 mb-3">
+                                    {{ filme.overview.substring(0, 150) }}...
+                                </p>
+                                <div
+                                    class="flex flex-wrap items-center space-x-2 space-y-2"
+                                >
+                                    <span
+                                        class="inline-block bg-indigo-600 text-indigo-100 text-xs px-3 py-1 rounded-full"
+                                        >{{ filme.genre_ids.map(id =>
+                                        generos[id]).join(', ') }}</span
+                                    >
+                                    <span
+                                        class="inline-block bg-yellow-500 text-yellow-900 text-xs px-3 py-1 rounded-full"
+                                        >{{ filme.vote_average.toFixed(1)
+                                        }}/10</span
+                                    >
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div
+                    v-if="recomendacoesIA"
+                    class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl p-4 md:p-8 fade-in"
+                >
+                    <h2
+                        class="text-2xl md:text-3xl font-semibold mb-6 text-green-300"
+                    >
+                        <i class="fas fa-robot mr-2"></i>Recomendações da IA
+                    </h2>
+                    <ul class="space-y-6 mb-4" v-if="recomendacoesIAfilm">
+                        <li
+                            v-for="filme in recomendacoesIAfilm"
+                            :key="filme.id"
+                            class="bg-white bg-opacity-20 p-4 md:p-6 rounded-2xl flex flex-col items-center movie-card"
+                        >
+                            <img
+                                :src="'https://image.tmdb.org/t/p/w92' + filme.poster_path"
+                                :alt="filme.title"
+                                class="mb-4 rounded-lg w-24 h-36 object-cover"
+                                loading="lazy"
+                            />
+                            <div class="text-center">
+                                <h3 class="font-semibold text-xl mb-2">
+                                    {{ filme.title }}
+                                </h3>
+                                <div class="mb-2">
+                                    <span
+                                        class="inline-block bg-indigo-600 text-indigo-100 text-xs px-3 py-1 rounded-full mr-2"
+                                        >{{ filme.genre_ids.map(id =>
+                                        generos[id]).join(', ') }}</span
+                                    >
+                                    <span
+                                        class="inline-block bg-yellow-500 text-yellow-900 text-xs px-3 py-1 rounded-full"
+                                        >{{ filme.vote_average.toFixed(1)
+                                        }}/10</span
+                                    >
+                                </div>
+                                <p class="text-sm text-indigo-200">
+                                    {{ filme.release_date.substring(0, 4) }}
+                                </p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="whitespace-pre-wrap">{{ recomendacoesIA }}</div>
+                </div>
+            </transition>
+        </div>
+
+        <script type="module">
+            import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+            import * as marked from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+
+            new Vue({
+                el: "#app",
+                data: {
+                    novoFilme: "",
+                    filmesAssistidos: [],
+                    recomendacoes: "",
+                    recomendacoesIA: "",
+                    recomendacoesIAfilm: "",
+                    resultadosBusca: [],
+                    generos: {},
+                    apiKey: "9a0693726db5464cbfa845abcf0928fa",
+                    engine: null,
+                    selectedModel: "gemma-2-2b-it-q4f16_1-MLC",
+                    useWebGPU: true,
+                    webGPUInitialized: false,
+                },
+                methods: {
+                    async buscarFilmes() {
+                        if (this.novoFilme.length > 2) {
+                            try {
+                                const response = await axios.get(
+                                    `https://api.themoviedb.org/3/search/movie?api_key=${this.apiKey}&query=${this.novoFilme}&language=pt-BR`,
+                                );
+                                this.resultadosBusca =
+                                    response.data.results.slice(0, 5);
+                            } catch (error) {
+                                console.error("Erro ao buscar filmes:", error);
+                            }
+                        } else {
+                            this.resultadosBusca = [];
+                        }
+                    },
+                    selecionarFilme(filme) {
+                        if (this.filmesAssistidos.length < 5) {
+                            this.filmesAssistidos.push(filme);
+                            this.novoFilme = "";
+                            this.resultadosBusca = [];
+                        } else {
+                            alert(
+                                "Você já adicionou 5 filmes. Remova um para adicionar outro.",
+                            );
+                        }
+                    },
+                    removerFilme(index) {
+                        this.filmesAssistidos.splice(index, 1);
+                    },
+
+                    async obterRecomendacoes() {
+                        if (this.filmesAssistidos.length === 0) {
+                            alert(
+                                "Por favor, adicione pelo menos um filme antes de obter recomendações.",
+                            );
+                            return;
+                        }
+
+                        try {
+                            const filmesTitulos = this.filmesAssistidos
+                                .map((f) => f.title)
+                                .join(", ");
+                            const prompt = `Com base nos seguintes filmes: ${filmesTitulos}, recomende 1(apenas 1 filme) filme semelhante. Para cada o filme recomendado, forneça o título comecando com "Titulo:" para um melhor parsing, uma breve descrição, explique por que estes filmes são semelhantes aos filmes favoritos e por que foi recomendado.`;
+
+                            const messages = [
+                                {
+                                    role: "system",
+                                    content:
+                                        "Você é um assistente especializado em recomendar filmes.",
+                                },
+                                { role: "user", content: prompt },
+                            ];
+
+                            let recomendacoesIA = "";
+                            let filmeAtual = null;
+                            let titulosEncontrados = [];
+
+                            const completion =
+                                await this.engine.chat.completions.create({
+                                    messages,
+                                    stream: true,
+                                });
+
+                            var buscarPoster = async (titulo) => {
+                                try {
+                                    const response = await axios.get(
+                                        `https://api.themoviedb.org/3/search/movie?api_key=${this.apiKey}&query=${encodeURIComponent(titulo)}&language=pt-BR`,
+                                    );
+
+                                    if (response.data.results) {
+                                        //console.log(response.data.results);
+                                        const matchingMovies =
+                                            response.data.results.filter(
+                                                (movie) =>
+                                                    movie.original_title.toLowerCase() ===
+                                                    titulo.toLowerCase(),
+                                            );
+
+                                        if (matchingMovies.length > 0) {
+                                            return matchingMovies[0];
+                                        } else {
+                                            return response.data.results[0];
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error(
+                                        "Erro ao buscar poster do filme:",
+                                        error,
+                                    );
+                                }
+                                return "";
+                            };
+
+                            for await (const chunk of completion) {
+                                const novoConteudo =
+                                    chunk.choices[0]?.delta.content || "";
+                                recomendacoesIA += novoConteudo;
+
+                                // Verifica se um novo título de filme foi encontrado
+
+                                // Formata o conteúdo recebido até agora
+                                //
+                                const tituloMatch = recomendacoesIA.match(
+                                    /\*\*.*Título:\*\*\s*"(.*?)"/g,
+                                );
+                                const tituloMatch2 =
+                                    recomendacoesIA.match(
+                                        /##\s*Titulo:\s*(.*)/g,
+                                    );
+
+                                if (tituloMatch || tituloMatch2) {
+                                    let titulo = "";
+                                    if (tituloMatch) {
+                                        titulo = tituloMatch[1];
+                                        filmeAtual = titulo;
+                                        titulosEncontrados.push(filmeAtual);
+                                    } else if (tituloMatch2) {
+                                        titulo = tituloMatch2[0].replace(
+                                            /##\s*Titulo:\s*/,
+                                            "",
+                                        );
+                                        this.titulo = titulo;
+                                    }
+
+                                    // Busca o poster apenas uma vez
+                                    //console.log(this.titulo);
+                                    buscarPoster(this.titulo).then(
+                                        (filmeEncontrado) => {
+                                            if (filmeEncontrado) {
+                                                this.film = [filmeEncontrado];
+                                            }
+                                        },
+                                    );
+                                }
+
+                                const formattedContent =
+                                    marked.parse(recomendacoesIA);
+
+                                // Atualiza a visualização
+                                this.recomendacoesIA = formattedContent;
+                                this.$nextTick(() => {
+                                    const recomendacoesIAElement =
+                                        this.$el.querySelector(
+                                            ".whitespace-pre-wrap",
+                                        );
+                                    if (recomendacoesIAElement) {
+                                        recomendacoesIAElement.innerHTML =
+                                            formattedContent;
+                                    }
+                                });
+                            }
+
+                            console.log("film", this.film);
+                            this.recomendacoesIAfilm = this.film;
+
+                            console.log(
+                                "Títulos encontrados:",
+                                titulosEncontrados,
+                            );
+                            console.log("URLs dos posters:", this.posterUrls);
+                        } catch (error) {
+                            console.error(
+                                "Erro ao obter recomendações:",
+                                error,
+                            );
+                            alert(
+                                "Ocorreu um erro ao obter as recomendações. Por favor, tente novamente mais tarde.",
+                            );
+                        }
+                    },
+                    async carregarGeneros() {
+                        try {
+                            const response = await axios.get(
+                                `https://api.themoviedb.org/3/genre/movie/list?api_key=${this.apiKey}&language=pt-BR`,
+                            );
+                            response.data.genres.forEach((genre) => {
+                                this.generos[genre.id] = genre.name;
+                            });
+                        } catch (error) {
+                            console.error("Erro ao carregar gêneros:", error);
+                        }
+                    },
+                    async obterFilmeAleatorio() {
+                        try {
+                            const response = await axios.get(
+                                `https://api.themoviedb.org/3/movie/popular?api_key=${this.apiKey}&language=pt-BR&page=${Math.floor(Math.random() * 500) + 1}`,
+                            );
+                            const filmes = response.data.results;
+                            const filmeAleatorio =
+                                filmes[
+                                    Math.floor(Math.random() * filmes.length)
+                                ];
+                            this.recomendacoes = [filmeAleatorio];
+                        } catch (error) {
+                            console.error(
+                                "Erro ao obter filme aleatório:",
+                                error,
+                            );
+                            alert(
+                                "Ocorreu um erro ao obter o filme aleatório. Por favor, tente novamente mais tarde.",
+                            );
+                        }
+                    },
+                    async initializeWebLLM() {
+                        if (this.useWebGPU) {
+                            console.log("start initialize");
+                            this.engine = new webllm.MLCEngine();
+                            this.engine.setInitProgressCallback((report) => {
+                                console.log(
+                                    "Initializing WebLLM:",
+                                    report.progress,
+                                );
+                            });
+                            await this.engine.reload(this.selectedModel, {
+                                temperature: 0.7,
+                                top_p: 0.95,
+                            });
+                            console.log("WebLLM initialized");
+                            this.webGPUInitialized = true;
+                        } else {
+                            console.log("WebGPU not used");
+                            // Implement alternative method here
+                        }
+                    },
+                },
+                watch: {
+                    useWebGPU(newValue) {
+                        if (newValue && !this.webGPUInitialized) {
+                            this.initializeWebLLM();
+                        } else if (!newValue) {
+                            // Implement alternative method here
+                            console.log("WebGPU disabled");
+                        }
+                    },
+                },
+                async mounted() {
+                    this.carregarGeneros();
+                    await this.initializeWebLLM();
+                },
+            });
+        </script>
+    </body>
+</html>
